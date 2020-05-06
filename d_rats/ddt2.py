@@ -15,17 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import print_function
 import struct
 import zlib
 import base64
-from . import yencode
+import yencode
 
 import threading
 
-from . import utils
-from six.moves import range
+import utils
 
 ENCODED_HEADER = "[SOB]"
 ENCODED_TRAILER = "[EOB]"
@@ -36,7 +33,7 @@ def update_crc(c, crc):
     for _ in range(0,8):
         c <<= 1
 
-        if (c & 0o400) != 0:
+        if (c & 0400) != 0:
             v = 1
         else:
             v = 0
@@ -148,7 +145,7 @@ class DDT2Frame(object):
         elif magic == 0x22:
             self.compress = False
         else:
-            print(("Ddt2      : Magic 0x%X not recognized" % magic))
+            print("Ddt2      : Magic 0x%X not recognized" % magic)
             return False
 
         header = val[:25]
@@ -174,7 +171,7 @@ class DDT2Frame(object):
         self.d_station = self.d_station.replace("~", "")
 
         if _checksum != checksum:
-            print(("Ddt2      : Checksum failed: %s != %s" % (checksum, _checksum)))
+            print("Ddt2      : Checksum failed: %s != %s" % (checksum, _checksum))
             return False
 
         if self.compress:
@@ -236,14 +233,14 @@ class DDT2EncodedFrame(DDT2Frame):
             h = val.index(ENCODED_HEADER) + len(ENCODED_TRAILER)
             t = val.rindex(ENCODED_TRAILER)
             payload = val[h:t]
-        except Exception as e:
-            print(("Ddt2      : Block has no header/trailer: %s" % e))
+        except Exception, e:
+            print("Ddt2      : Block has no header/trailer: %s" % e)
             return False
 
         try:
             decoded = decode(payload)
-        except Exception as e:
-            print(("Ddt2      : Unable to decode frame: %s" % e))
+        except Exception, e:
+            print("Ddt2      : Unable to decode frame: %s" % e)
             return False
 
         return DDT2Frame.unpack(self, decoded)
@@ -266,13 +263,13 @@ def test_symmetric(compress=True):
     fin.set_compress(compress)
     p = fin.get_packed()
 
-    print(("Ddt2      :%s" % p))
+    print("Ddt2      :%s" % p)
 
     fout = DDT2EncodedFrame()
     fout.unpack(p)
 
     #print((fout.__dict__)
-    print(("Ddt2      :%s" % fout))
+    print("Ddt2      :%s" % fout)
 
 def test_crap():
     f = DDT2EncodedFrame()
@@ -281,7 +278,7 @@ def test_crap():
             print("Ddt2      : FAIL")
         else:
             print("Ddt2      : PASS")
-    except Exception as e:
+    except Exception, e:
         print("Ddt2      : PASS")
 
 if __name__ == "__main__":

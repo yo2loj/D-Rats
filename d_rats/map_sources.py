@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import print_function
 import time
 import threading
 import os
@@ -25,8 +23,8 @@ from glob import glob
 import libxml2
 import gobject
 
-from . import utils
-from . import dplatform
+import utils
+import dplatform
 
 class Callable:
     def __init__(self, target):
@@ -138,7 +136,7 @@ class MapPointThreaded(MapPoint):
 
     def __start_thread(self):
         if self.__thread and self.__thread.isAlive():
-            print("Threaded Point: Still waiting on a thread")
+            print "Threaded Point: Still waiting on a thread"
             return
 
         self.__thread = threading.Thread(target=self.__thread_fn)
@@ -150,8 +148,8 @@ class MapPointThreaded(MapPoint):
             try:
                 self.__ts = time.time()
                 self.__start_thread()
-            except Exception as e:
-                print("Can't start: %s" % e)
+            except Exception, e:
+                print "Can't start: %s" % e
 
     def __thread_fn(self):
         self.do_update()
@@ -159,23 +157,23 @@ class MapPointThreaded(MapPoint):
 
 class MapUSGSRiver(MapPointThreaded):
     def do_update(self):
-        print("[River %s] Doing update..." % self.__site)
+        print "[River %s] Doing update..." % self.__site
         if  not self.__have_site:
             try:
                 self.__parse_site()
                 self.__have_site = True
-            except Exception as e:
+            except Exception, e:
                 utils.log_exception()
-                print("[River %s] Failed to parse site: %s" % (self.__site, e))
+                print "[River %s] Failed to parse site: %s" % (self.__site, e)
                 self.set_name("Invalid river %s" % self.__site)
 
         try:
             self.__parse_level()
-        except Exception as e:
+        except Exception, e:
             utils.log_exception()
-            print("[River %s] Failed to parse level: %s" % (self.__site, e))
+            print "[River %s] Failed to parse level: %s" % (self.__site, e)
 
-        print("[River %s] Done with update" % self.__site)
+        print "[River %s] Done with update" % self.__site
 
     def __parse_site(self):
         url = "http://waterdata.usgs.gov/nwis/inventory?search_site_no=%s&format=sitefile_output&sitefile_output_format=xml&column_name=agency_cd&column_name=site_no&column_name=station_nm&column_name=dec_lat_va&column_name=dec_long_va&column_name=alt_va" % self.__site
@@ -183,9 +181,9 @@ class MapUSGSRiver(MapPointThreaded):
         p = dplatform.get_platform()
         try:
             fn, headers = p.retrieve_url(url)
-            content = open(fn).read()
-        except Exception as e:
-            print("[NSGS] Failed to fetch info for %s: %s" % (self.__site, e))
+            content = file(fn).read()
+        except Exception, e:
+            print "[NSGS] Failed to fetch info for %s: %s" % (self.__site, e)
             self.set_name("NSGS NWIS Site %s" % self.__site)
             return
 
@@ -208,10 +206,10 @@ class MapUSGSRiver(MapPointThreaded):
         p = dplatform.get_platform()
         try:
             fn, headers = p.retrieve_url(url)
-            line = open(fn).readlines()[-1]
-        except Exception as e:
-            print("[NSGS] Failed to fetch info for site %s: %s" % (self.__site,
-                                                                   e))
+            line = file(fn).readlines()[-1]
+        except Exception, e:
+            print "[NSGS] Failed to fetch info for site %s: %s" % (self.__site,
+                                                                   e)
             self.set_comment("No data")
             self.set_timestamp(time.time())
 
@@ -235,16 +233,16 @@ class MapNBDCBuoy(MapPointThreaded):
         p = dplatform.get_platform()
         try:
             fn, headers = p.retrieve_url(self.__url)
-            content = open(fn).read()
-        except Exception as e:
-            print("[NBDC] Failed to fetch info for %i: %s" % (self.__buoy, e))
+            content = file(fn).read()
+        except Exception, e:
+            print "[NBDC] Failed to fetch info for %i: %s" % (self.__buoy, e)
             self.set_name("NBDC %s" % self.__buoy)
             return
 
         try:
             doc = libxml2.parseMemory(content, len(content))
-        except Exception as e:
-            print("[NBDC] Failed to parse document %s: %s" % (self.__url, e))
+        except Exception, e:
+            print "[NBDC] Failed to parse document %s: %s" % (self.__url, e)
             self.set_name("NBDC Unknown Buoy %s" % self.__buoy)
             return
 
@@ -256,8 +254,8 @@ class MapNBDCBuoy(MapPointThreaded):
 
         try:
             s = _xdoc_getnodeval(ctx, base + "description")
-        except Exception as e:
-            print("[Buoy %s] Unable to get description: %s" % (self.__buoy, e))
+        except Exception, e:
+            print "[Buoy %s] Unable to get description: %s" % (self.__buoy, e)
             return
 
         for i in ["<strong>", "</strong>", "<br />", "&#176;"]:
@@ -267,15 +265,15 @@ class MapNBDCBuoy(MapPointThreaded):
 
         try:
             slat, slon = _xdoc_getnodeval(ctx, base + "georss:point").split(" ", 1)
-        except Exception as e:
+        except Exception, e:
             utils.log_exception()
-            print("[Buoy %s]: Result has no georss:point" % self.__buoy)
+            print "[Buoy %s]: Result has no georss:point" % self.__buoy
             return
 
         self.set_latitude(float(slat))
         self.set_longitude(float(slon))
 
-        print("[Buoy %s] Done with update" % self.__buoy)
+        print "[Buoy %s] Done with update" % self.__buoy
 
     def __init__(self, buoy):
         MapPointThreaded.__init__(self)
@@ -318,7 +316,7 @@ class MapSource(gobject.GObject):
         pass
 
     def add_point(self, point):
-        had = point.get_name() in self._points
+        had = self._points.has_key(point.get_name())
         self._points[point.get_name()] = point
         if had:
             self.emit("point-updated", point)
@@ -330,7 +328,7 @@ class MapSource(gobject.GObject):
         self.emit("point-deleted", point)
 
     def get_points(self):
-        return list(self._points.values())
+        return self._points.values()
 
     def get_point_by_name(self, name):
         return self._points[name]
@@ -373,7 +371,7 @@ class MapFileSource(MapSource):
         path = os.path.join(dirpath, "%s.csv" % name)
 
         if create and not os.path.exists(path):
-            f = open(path, "a").close()
+            f = file(path, "a").close()
 
         return MapFileSource(name, "Static file", path)
 
@@ -382,7 +380,7 @@ class MapFileSource(MapSource):
     def __parse_line(self, line):
         try:
             id, icon, lat, lon, alt, comment, show = line.split(",", 6)
-        except Exception as e:
+        except Exception, e:
             raise MapSourcePointError(str(e))
         
         if alt:
@@ -399,7 +397,7 @@ class MapFileSource(MapSource):
 
     def save(self):
         self._need_save = 0
-        f = open(self._fn, "w")
+        f = file(self._fn, "w")
 
         for point in self.get_points():
             f.write("%s,%s,%f,%f,%f,%s,%s%s" % (point.get_name(),
@@ -420,18 +418,18 @@ class MapFileSource(MapSource):
         self.__need_save = 0
 
         try:
-            input = open(fn)
-        except Exception as e:
+            input = file(fn)
+        except Exception, e:
             msg = "Failed to open %s: %s" % (fn, e)
-            print(msg)
+            print msg
             raise MapSourceFailedToConnect(msg)
 
         lines = input.readlines()
         for line in lines:
             try:
                 point = self.__parse_line(line)
-            except Exception as e:
-                print("Failed to parse: %s" % e)
+            except Exception, e:
+                print "Failed to parse: %s" % e
                 continue
 
             self._points[point.get_name()] = point
@@ -448,9 +446,9 @@ class MapUSGSRiverSource(MapSource):
         sites = tuple(config.get("rivers", name).split(","))
         try:
             _name = config.get("rivers", "%s.label" % name)
-        except Exception as e:
-            print("No option %s.label" % name)
-            print(e)
+        except Exception, e:
+            print "No option %s.label" % name
+            print e
             _name = name
 
         return MapUSGSRiverSource(_name, "NWIS Rivers", *sites)
@@ -476,7 +474,7 @@ class MapUSGSRiverSource(MapSource):
         return "".join(name)
 
     def _point_updated(self, point, foo):
-        if point.get_name() not in self._points:
+        if not self._points.has_key(point.get_name()):
             self._points[point.get_name()] = point
             self.emit("point-added", point)
         else:
@@ -504,9 +502,9 @@ class MapNBDCBuoySource(MapSource):
         _sites = config.get("buoys", name).split(",")
         try:
             _name = config.get("buoys", "%s.label" % name)
-        except Exception as e:
-            print("No option %s.label" % name)
-            print(e)
+        except Exception, e:
+            print "No option %s.label" % name
+            print e
             _name = name
         sites = tuple([x for x in _sites])
 
@@ -533,7 +531,7 @@ class MapNBDCBuoySource(MapSource):
         return "".join(name)
 
     def _point_updated(self, point, foo):
-        if point.get_name() not in self._points:
+        if not self._points.has_key(point.get_name()):
             self._points[point.get_name()] = point
             self.emit("point-added", point)
         else:

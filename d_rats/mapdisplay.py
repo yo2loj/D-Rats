@@ -16,11 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import print_function
 import os
 import math
-import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+import urllib
 import time
 import random
 import shutil
@@ -31,22 +29,21 @@ import copy
 import gtk
 import gobject
 
-#py3 from . import mainapp
-from . import dplatform
-from . import miscwidgets
-from . import inputdialog
-from . import utils
-from . import geocode_ui
-from . import map_sources
-from . import map_source_editor
-from . import signals
-from . import debug
+import mainapp
+import dplatform
+import miscwidgets
+import inputdialog
+import utils
+import geocode_ui
+import map_sources
+import map_source_editor
+import signals
+import debug
 
 ##############
 from math import *
-from .ui.main_common import ask_for_confirmation
-from .gps import GPSPosition, distance, value_with_units, DPRS_TO_APRS
-from six.moves import range
+from ui.main_common import ask_for_confirmation
+from gps import GPSPosition, distance, value_with_units, DPRS_TO_APRS
 
 CROSSHAIR = "+"
 
@@ -62,17 +59,17 @@ def set_base_dir(basedir, mapurl, mapkey):
     
     global BASE_DIR
     BASE_DIR = basedir 
-    print(("Mapdisplay: BASE_DIR configured to %s: " % BASE_DIR))
+    print("Mapdisplay: BASE_DIR configured to %s: " % BASE_DIR)
   
     #setup of the url where go to retrieve tiles
     global MAP_URL
     MAP_URL = mapurl 
-    print(("Mapdisplay: MAP_URL configured to: %s" % MAP_URL))
+    print("Mapdisplay: MAP_URL configured to: %s" % MAP_URL)
     
     #setup of the key to append to the url to retrieve tiles
     global MAP_URL_KEY
     MAP_URL_KEY = mapkey 
-    print(("Mapdisplay: MAP_URL_KEY configured to: %s " %MAP_URL_KEY))
+    print("Mapdisplay: MAP_URL_KEY configured to: %s " %MAP_URL_KEY)
     
 CONFIG = None
 
@@ -100,18 +97,12 @@ def fetch_url(url, local):
         raise Exception("Not connected")
 
     if PROXY:
-        #proxies = {"http" : PROXY}
-        authinfo = urllib.request.HTTPBasicAuthHandler()
-        proxy_support = six.moves.urllib.request.ProxyHandler({"http" : PROXY})
-        opener = six.moves.urllib.request.build_opener(proxy_support, authinfo,
-                                     urllib.request.CacheFTPHandler)
-        six.moves.urllib.request.install_opener(opener)
+        proxies = {"http" : PROXY}
     else:
         proxies = None
 
-    #data = six.moves.urllib.request.urlopen(url, proxies=proxies)
-    data = six.moves.urllib.request.urlopen(url)
-    local_file = open(local, "wb")
+    data = urllib.urlopen(url, proxies=proxies)
+    local_file = file(local, "wb")
     d = data.read()
     local_file.write(d)
     data.close()
@@ -165,7 +156,7 @@ class MarkerEditDialog(inputdialog.FieldDialog):
                 iidx = symlist.index(point.get_aprs_symbol())
                 iconsel.set_active(iidx)
             except ValueError:
-                print(("Mapdisplay: No such symbol `%s'" % point.get_aprs_symbol()))
+                print("Mapdisplay: No such symbol `%s'" % point.get_aprs_symbol())
         else:
             iconsel.set_sensitive(False)
 
@@ -251,10 +242,10 @@ class MapTile(object):
                 #print("Mapdisplay: try opening %s" % url)
                 try:
                     fetch_url(url, self._local_path())
-                    print(("Mapdisplay: opened %s" % url))
+                    print("Mapdisplay: opened %s" % url)
                     return True
-                except Exception as e:
-                    print(("Mapdisplay: [%i] Failed to fetch `%s': %s" % (i, url, e)))
+                except Exception, e:
+                    print("Mapdisplay: [%i] Failed to fetch `%s': %s" % (i, url, e))
 
             return False
         else:
@@ -523,9 +514,9 @@ class MapWidget(gtk.DrawingArea):
         if path:
             try:
                 pb = gtk.gdk.pixbuf_new_from_file(path)
-            except Exception as e:
+            except Exception, e:
                 utils.log_exception()
-                print(("Mapdisplay: Deleting the broken tile to force future download %s" % path))
+                print("Mapdisplay: Deleting the broken tile to force future download %s" % path)
                 os.remove(path)
                 pb = self.broken_tile()
         else:
@@ -568,7 +559,7 @@ class MapWidget(gtk.DrawingArea):
             self.pixmap = gtk.gdk.Pixmap(self.window,
                                          self.width * self.tilesize,
                                          self.height * self.tilesize)
-        except Exception as e:
+        except Exception, e:
             # Window is not loaded, thus can't load tiles
             return
 
@@ -780,7 +771,7 @@ class MapWindow(gtk.Window):
         action = _action.get_name()
 
         if action == "delete":
-            print(("Mapdisplay: Deleting %s/%s" % (group, id)))
+            print("Mapdisplay: Deleting %s/%s" % (group, id))
             for source in self.map_sources:
                 if source.get_name() == group:
                     if not source.get_mutable():
@@ -891,7 +882,7 @@ class MapWindow(gtk.Window):
             if not parent:
                 parent = iter
             group = model.get_value(parent, 1)
-            if group in self.colors:
+            if self.colors.has_key(group):
                 rend.set_property("foreground", self.colors[group])
 
         c = self.marker_list._view.get_column(1)
@@ -1005,7 +996,7 @@ class MapWindow(gtk.Window):
 
         self.map.export_to(mf, bounds)
 
-        f = open(hf, "w")
+        f = file(hf, "w")
         f.write(html)
         f.close()
 
@@ -1199,7 +1190,7 @@ class MapWindow(gtk.Window):
                               fix.to_NMEA_GGA(), True)
 
                 break
-            except Exception as e:
+            except Exception, e:
                 utils.log_exception()
                 ed = gtk.MessageDialog(buttons=gtk.BUTTONS_OK, parent=d)
                 ed.set_property("text", _("Invalid value") + ": %s" % e)
@@ -1268,7 +1259,7 @@ class MapWindow(gtk.Window):
 
         lat, lon = self.map.xy2latlon(mx, my)
 
-        print(("Mapdisplay: Button %i at %i,%i" % (event.button, mx, my)))
+        print("Mapdisplay: Button %i at %i,%i" % (event.button, mx, my))
         if event.button == 3:
             vals = { "lat" : lat,
                      "lon" : lon,
@@ -1278,12 +1269,12 @@ class MapWindow(gtk.Window):
             if menu:
                 menu.popup(None, None, None, event.button, event.time)
         elif event.type == gtk.gdk.BUTTON_PRESS:
-            print(("Mapdisplay: Clicked: %.4f,%.4f" % (lat, lon)))
+            print("Mapdisplay: Clicked: %.4f,%.4f" % (lat, lon))
             # The crosshair marker has been missing since 0.3.0
             #self.set_marker(GPSPosition(station=CROSSHAIR,
             #                            lat=lat, lon=lon))
         elif event.type == gtk.gdk._2BUTTON_PRESS:
-            print(("Mapdisplay: recenter on %.4f, %.4f" % (lat,lon)))
+            print("Mapdisplay: recenter on %.4f, %.4f" % (lat,lon))
 
             self.recenter(lat, lon)
 
@@ -1403,7 +1394,7 @@ class MapWindow(gtk.Window):
                                       point.get_longitude(),
                                       center.distance_from(this),
                                       center.bearing_to(this))
-        except Exception as e:
+        except Exception, e:
             if str(e) == "Item not found":
                 # this is evil
                 print("Mapdisplay: Adding point instead of updating")
@@ -1625,9 +1616,9 @@ class MapWindow(gtk.Window):
                 return
 
             for source in self.map_sources:
-                print(("Mapdisplay: %s,%s" % (source.get_name(), group)))
+                print("Mapdisplay: %s,%s" % (source.get_name(), group))
                 if source.get_name() == group:
-                    print(("Mapdisplay: Adding new point %s to %s" % (point.get_name(),source.get_name())))
+                    print("Mapdisplay: Adding new point %s to %s" % (point.get_name(),source.get_name()))
                     source.add_point(point)
                     source.save()
                     return
@@ -1670,7 +1661,7 @@ class MapWindow(gtk.Window):
 if __name__ == "__main__":
     print("Mapdisplay: __Executing __main__ section")
     import sys
-    from . import gps
+    import gps
 
     if len(sys.argv) == 3:
         m = MapWindow()

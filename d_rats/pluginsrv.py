@@ -15,16 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import print_function
 import os
 import threading
-from six.moves.xmlrpc_server import SimpleXMLRPCServer
+from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 import gobject
 
-from . import signals
-from . import utils
+import signals
+import utils
 from d_rats.sessions import rpc
 
 class DRatsChatEvent(object):
@@ -77,7 +75,7 @@ class DRatsPluginProxy(gobject.GObject):
 
     def send_chat(self, port, message):
         """Send a chat @message on @port"""
-        print(("Pluginsrv : Sending chat on port %s: %s" % (port, message)))
+        print("Pluginsrv : Sending chat on port %s: %s" % (port, message))
         self.emit("user-send-chat", "CQCQCQ", port, message, False)
 
         return 0
@@ -85,7 +83,7 @@ class DRatsPluginProxy(gobject.GObject):
     def list_ports(self):
         """Return a list of port names"""
         slist = self.emit("get-station-list")
-        return list(slist.keys())
+        return slist.keys()
 
     def send_file(self, station, filename, port=None):
         """Send a file to @station specified by @filename on optional port.
@@ -97,7 +95,7 @@ class DRatsPluginProxy(gobject.GObject):
 
         sname = os.path.basename(filename)
 
-        print(("Pluginsrv : Sending file %s to %s on port %s" % (filename, station, port)))
+        print("Pluginsrv : Sending file %s to %s on port %s" % (filename, station, port))
         self.emit("user-send-file", station, port, filename, sname)
 
         return 0
@@ -132,7 +130,7 @@ class DRatsPluginProxy(gobject.GObject):
     def get_result(self, ident):
         """Get the result of job @ident.  Returns a structure, empty until
         completion"""
-        if ident in self.__persist:
+        if self.__persist.has_key(ident):
             result = self.__persist[ident]
             del self.__persist[ident]
         else:

@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import print_function
 import os
 import shutil
 from glob import glob
@@ -24,9 +22,9 @@ from glob import glob
 import gtk
 import gobject
 
-from . import map_sources
-from . import miscwidgets
-from . import utils
+import map_sources
+import miscwidgets
+import utils
 
 class EditorInitCancel(Exception):
     pass
@@ -76,7 +74,7 @@ class MapSourcesEditor(object):
         self.__view.append_column(c)
 
     def _setup_typesel(self, wtree):
-        choice = miscwidgets.make_choice(list(SOURCE_TYPES.keys()),
+        choice = miscwidgets.make_choice(SOURCE_TYPES.keys(),
                                          False,
                                          "Static")
         choice.show()
@@ -88,7 +86,7 @@ class MapSourcesEditor(object):
     def __init__(self, config):
         fn = config.ship_obj_fn("ui/mainwindow.glade")
         if not os.path.exists(fn):
-            print(fn)
+            print fn
             raise Exception("Unable to load UI file")
         wtree = gtk.glade.XML(fn, "srcs_dialog", "D-RATS")
 
@@ -114,9 +112,9 @@ class MapSourcesEditor(object):
                     self.__store.append((stype,
                                          sed.get_source().get_name(),
                                          sed))
-                except Exception as e:
+                except Exception, e:
                     utils.log_exception()
-                    print("Failed to open source %s:%s" % (stype, key))
+                    print "Failed to open source %s:%s" % (stype, key)
 
     def run(self):
         return self.__dialog.run()
@@ -131,7 +129,7 @@ class MapSourceEditor(object):
 
         fn = config.ship_obj_fn("ui/mainwindow.glade")
         if not os.path.exists(fn):
-            print(fn)
+            print fn
             raise Exception("Unable to load UI file")
         self._wtree = gtk.glade.XML(fn, "src_dialog", "D-RATS")
 
@@ -227,9 +225,9 @@ class RiverMapSourceEditor(MapSourceEditor):
         try:
             self._config.remove_option("rivers", id)
             self._config.remove_option("rivers", "%s.label" % id)
-        except Exception as e:
+        except Exception, e:
             log_exception()
-            print("Error deleting rivers/%s: %s" % (id, e))
+            print "Error deleting rivers/%s: %s" % (id, e)
 
     def save(self):
         if not self._config.has_section("rivers"):
@@ -274,9 +272,9 @@ class BuoyMapSourceEditor(MapSourceEditor):
         try:
             self._config.remove_option("buoys", id)
             self._config.remove_option("buoys", "%s.label" % id)
-        except Exception as e:
+        except Exception, e:
             log_exception()
-            print("Error deleting buoys/%s: %s" % (id, e))
+            print "Error deleting buoys/%s: %s" % (id, e)
 
 
     def save(self):

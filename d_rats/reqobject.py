@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import print_function
 import gtk
 import gobject
 
-from . import miscwidgets
+import miscwidgets
 
 class RequestRemoteObjectUI(gtk.Dialog):
     def __init__(self, rpcsession, station, parent=None):
@@ -53,6 +51,6 @@ class RequestRemoteObjectUI(gtk.Dialog):
     def get_selected_item(self):
         try:
             return self.__list.get_item(self.__list.get_selected())[1]
-        except Exception as e:
-            print(("ReqObj    : Unable to get selected item: %s" % e))
+        except Exception, e:
+            print("ReqObj    : Unable to get selected item: %s" % e)
             return None

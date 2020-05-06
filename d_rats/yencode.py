@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
 import sys
 
 DEFAULT_BANNED = "\x11\x13\x1A\00\xFD\xFE\xFF"
@@ -58,7 +57,7 @@ def ydecode_buffer(buf):
 if __name__=="__main__":
     import sys
 
-    f = open(sys.argv[2])
+    f = file(sys.argv[2])
     inbuf = f.read()
 
     if sys.argv[1] == "-e":
