@@ -1,12 +1,10 @@
-from __future__ import absolute_import
-from __future__ import print_function
 import gtk
 import tempfile
 import os
 
-from . import inputdialog
-from . import miscwidgets
-from . import dplatform #imported by kater apparently not used...
+import inputdialog
+import miscwidgets
+import dplatform #imported by kater apparently not used...
 
 sizes = [
     "160x120",
@@ -59,9 +57,9 @@ def update_image(filename, dlg):
                                "resized_" + base + ".jpg")
     resized.save(dlg.resized, quality=dlg.quality)
     
-    print("Saved to %s" % dlg.resized)
+    print "Saved to %s" % dlg.resized
 
-    f = open(dlg.resized)
+    f = file(dlg.resized)
     f.seek(0, 2)
     size = f.tell()
     f.close()
@@ -123,8 +121,8 @@ def send_image(fn, dlgParent=None):
 
     try:
         img = IMAGE.open(fn)
-    except IOError as e:
-        print("%s: %s" % (fn, e))
+    except IOError, e:
+        print "%s: %s" % (fn, e)
         d = gtk.MessageDialog(buttons=gtk.BUTTONS_OK, parent=dlgParent)
         d.set_property("text", _("Unknown image type"))
         d.run()
@@ -143,5 +141,5 @@ def send_image(fn, dlgParent=None):
 
 if __name__ == "__main__":
     has_image_support()
-    print(send_image())
+    print send_image()
     gtk.main()

@@ -15,10 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
 import os
 import libxml2
-import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+import urllib
 
 class InvalidXMLError(Exception):
     pass
@@ -83,7 +82,7 @@ class WUObservation(object):
         return self.__parse_doc(doc)
 
     def from_uri(self, uri):
-        fn, foo = six.moves.urllib.request.urlretrieve(uri)
+        fn, foo = urllib.urlretrieve(uri)
         doc = libxml2.parseFile(fn)
         os.remove(fn)
         return self.__parse_doc(doc)

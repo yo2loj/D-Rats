@@ -15,14 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import print_function
 import os
 import threading
 import poplib
 import smtplib
 import email
-from six.moves import range
 try:
     from email.mime.multipart import MIMEMultipart
     from email.mime.base import MIMEBase
@@ -35,16 +32,16 @@ except ImportError:
 
 import rfc822
 import time
-from . import dplatform
+import dplatform
 import gobject
 import re
 import random
 
-from . import formgui
-from .ui import main_events
-from . import signals
-from . import utils
-from . import msgrouting
+import formgui
+from ui import main_events
+import signals
+import utils
+import msgrouting
 
 
 def create_form_from_mail(config, mail, tmpfn):
@@ -76,10 +73,10 @@ def create_form_from_mail(config, mail, tmpfn):
 
     messageid = mail.get("Message-ID", time.strftime("%m%d%Y%H%M%S"))
     if not msgrouting.msg_lock(tmpfn):
-        print("AIEE: Unable to lock incoming email message file!")
+        print "AIEE: Unable to lock incoming email message file!"
 
     if xml:
-        f = open(tmpfn, "w")
+        f = file(tmpfn, "w")
         f.write(xml)
         f.close()
         form = formgui.FormFile(tmpfn)
@@ -88,7 +85,7 @@ def create_form_from_mail(config, mail, tmpfn):
             recip, addr = recip.split("%", 1)
             recip = recip.upper()
     else:
-        print("Email from %s: %s" % (sender, subject))
+        print "Email from %s: %s" % (sender, subject)
 
         recip, addr = rfc822.parseaddr(mail.get("To", "UNKNOWN"))
 
@@ -138,7 +135,7 @@ class MailThread(threading.Thread, gobject.GObject):
         self._coerce_call = None
 
     def message(self, message):
-        print("[MAIL %s@%s] %s" % (self.username, self.server, message))
+        print "[MAIL %s@%s] %s" % (self.username, self.server, message)
 
     def create_form_from_mail(self, mail):
         id = self.config.get("user", "callsign") + \
@@ -150,15 +147,15 @@ class MailThread(threading.Thread, gobject.GObject):
                            "%s.xml" % mid)
         try:
             form = create_form_from_mail(self.config, mail, ffn)
-        except Exception as e:
-            print("Failed to create form from mail: %s" % e)
+        except Exception, e:
+            print "Failed to create form from mail: %s" % e
             return    
 
         if self._coerce_call:
-            print("Coercing to %s" % self._coerce_call)
+            print "Coercing to %s" % self._coerce_call
             form.set_path_dst(self._coerce_call)
         else:
-            print("Not coercing")
+            print "Not coercing"
     
         form.add_path_element("EMAIL")
         form.add_path_element(self.config.get("user", "callsign"))
@@ -201,7 +198,7 @@ class MailThread(threading.Thread, gobject.GObject):
         else:
             try:
                 mails = self.fetch_mails()
-            except Exception as e:
+            except Exception, e:
                 result = "Failed (%s)" % e
 
             if mails:
@@ -296,7 +293,7 @@ class AccountMailThread(MailThread):
             mails = []
             try:
                 mails = self.fetch_mails()
-            except Exception as e:
+            except Exception, e:
                 self.message("Failed to retrieve messages: %s" % e)
             for mail in mails:
                 self.__action(mail)
@@ -339,7 +336,7 @@ def __validate_access(config, callsign, emailaddr, types):
             #print "%s -> %s does not match %s,%s,%s" % (callsign, emailaddr,
             #                                            call, access, filter)
 
-    print("No match found")
+    print "No match found"
 
     return False
 
